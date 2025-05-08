@@ -1,0 +1,1 @@
+Hi, my name is **Anushka Dandam** | and I would like to talk about **python** | as it relates to my topic of interest |. However, I realized the topic I was given was **python**, not pandas |. Let me start again |. Today, I want to discuss the **basics of python** | and its applications in our field |.
