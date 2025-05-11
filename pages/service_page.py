@@ -2928,8 +2928,6 @@ def process_with_gemini(transcription, purpose, audience, duration, tone, additi
 
 
 
-
-
 def identify_mispronounced_words(audio_file, transcription):
     """Identify mispronounced words from an audio file using Gemini and return feedback."""
     try:
@@ -2976,76 +2974,46 @@ def identify_mispronounced_words(audio_file, transcription):
         prompt = prompt.format(transcription=transcription)
         response = model.generate_content([prompt, uploaded])
         result = response.text.strip()
+        # print("result for mis words", result)
         
         os.remove(temp_audio_path)
-        
-        # Debug: Log transcription and raw response
-        # st.write("Transcription:", transcription)
-        # st.write("Raw Gemini Pronunciation Response:", result)
         
         pronunciation_feedback = ""
         mispronounced_words = []
         
         # Extract feedback
         feedback_match = re.search(r'Pronunciation Feedback: (.+?)(?:\nMispronounced Words:|$)', result, re.DOTALL)
+        # print("feedbackmatch", feedback_match)
         if feedback_match:
             pronunciation_feedback = feedback_match.group(1).strip()
+            # print("matched pronounced words", pronunciation_feedback)
         
         # Check for "No mispronounced words detected"
         if "No mispronounced words detected" in result:
             mispronounced_words = []
         else:
-            # Extract mispronounced words section
-            mispronounced_section = re.search(r'Mispronounced Words:\n(.+?)(?:\nAdditional Notes:|\n\n|$)', result, re.DOTALL)
-            if mispronounced_section:
-                section_text = mispronounced_section.group(1).strip()
-                
-                # Split by word entries
-                word_blocks = re.split(r'\n\s*- Word: ', section_text)[1:]  # Skip first empty split
-                failed_blocks = []
-                for block in word_blocks:
-                    block = block.strip()
-                    word_match = re.match(
-                        r'(.+?)\n\s*Correct Pronunciation: (.+?)\n\s*Phonetic Transcription: (.+?)\n\s*Explanation: (.+?)(?=\n\s*- Word:|\n\s*Additional Notes:|\n\n|$)',
-                        block, re.DOTALL
-                    )
-                    if word_match:
-                        word, correct_pron, phonetic, explanation = word_match.groups()
-                        mispronounced_words.append({
-                            'word': word.strip(),
-                            'correct_pronunciation': correct_pron.strip(),
-                            'phonetic_transcription': phonetic.strip(),
-                            'explanation': explanation.strip()
-                        })
-                    else:
-                        failed_blocks.append(block)
-                
-                # Debug: Log failed blocks
-                if failed_blocks:
-                    st.write("Failed to parse blocks:", failed_blocks)
-                
-                # Fallback parsing if any entries were missed
-                if len(mispronounced_words) < 13:  # Expecting 13 words
-                    word_matches = re.findall(
-                        r'- Word: (.+?)\n\s*Correct Pronunciation: (.+?)\n\s*Phonetic Transcription: (.+?)\n\s*Explanation: (.+?)(?=\n\s*- Word:|\n\s*Additional Notes:|\n\n|$)',
-                        section_text, re.DOTALL
-                    )
-                    for word, correct_pron, phonetic, explanation in word_matches:
-                        entry = {
-                            'word': word.strip(),
-                            'correct_pronunciation': correct_pron.strip(),
-                            'phonetic_transcription': phonetic.strip(),
-                            'explanation': explanation.strip()
-                        }
-                        if entry not in mispronounced_words:
-                            mispronounced_words.append(entry)
-        
-        # Debug: Log parsed mispronounced words
-        # st.write("Parsed Mispronounced Words:", mispronounced_words)
+            # Extract mispronounced words using a more robust regex
+            word_matches = re.findall(
+                r'- Word: (.+?)\n\s*Correct Pronunciation: (.+?)\n\s*Phonetic Transcription: (.+?)\n\s*Explanation: (.+?)(?=\n\s*- Word:|\n\s*Additional Notes:|\Z)',
+                result, re.DOTALL
+            )
+            for word, correct_pron, phonetic, explanation in word_matches:
+                mispronounced_words.append({
+                    'word': word.strip(),
+                    'correct_pronunciation': correct_pron.strip(),
+                    'phonetic_transcription': phonetic.strip(),
+                    'explanation': explanation.strip()
+                })
         
         # Extract additional notes
         notes_match = re.search(r'Additional Notes: (.+?)(?:\n\n|$)', result, re.DOTALL)
         notes = notes_match.group(1).strip() if notes_match else ""
+        
+        print("pronouced words", {
+            'mispronounced_words': mispronounced_words,
+            'pronunciation_feedback': pronunciation_feedback,
+            'notes': notes
+        })
         
         return {
             'mispronounced_words': mispronounced_words,
@@ -3060,6 +3028,142 @@ def identify_mispronounced_words(audio_file, transcription):
             'pronunciation_feedback': 'Analysis failed due to an error.',
             'notes': str(e)
         }
+
+
+
+# def identify_mispronounced_words(audio_file, transcription):
+#     """Identify mispronounced words from an audio file using Gemini and return feedback."""
+#     try:
+#         with tempfile.NamedTemporaryFile(delete=False, suffix=".ogg") as temp_audio:
+#             temp_audio.write(audio_file.read())
+#             temp_audio_path = temp_audio.name
+        
+#         uploaded = genai.upload_file(temp_audio_path)
+#         model = genai.GenerativeModel('gemini-1.5-flash')
+        
+#         prompt = """
+#         You are a pronunciation expert analyzing a speech audio file and its transcription. Your task is to:
+#         1. Evaluate the pronunciation accuracy of the speaker based on standard American English.
+#         2. Identify all mispronounced words, providing details for each, but only if the errors are clear and significant.
+
+#         Transcription:
+#         {transcription}
+
+#         For each mispronounced word, provide:
+#         - Word: The mispronounced word.
+#         - Correct Pronunciation: A clear, syllable-by-syllable breakdown (e.g., YOU-ni-VER-si-tee).
+#         - Phonetic Transcription: The IPA transcription (e.g., /ˌjuːnɪˈvɜːrsəti/).
+#         - Explanation: Why the word was mispronounced and how to correct it.
+
+#         Format your response as follows:
+#         Pronunciation Feedback: [Overall assessment of pronunciation accuracy]
+#         Mispronounced Words:
+#         - Word: [word]
+#           Correct Pronunciation: [syllable breakdown]
+#           Phonetic Transcription: [IPA]
+#           Explanation: [details]
+#         [If no mispronounced words are detected, state: "No mispronounced words detected."]
+#         Additional Notes: [Any additional observations or limitations, e.g., audio quality, need for visual confirmation, or acceptable regional variations]
+
+#         Guidelines:
+#         - Only identify words as mispronounced if there are clear and significant errors that impact clarity (e.g., incorrect stress, slurred syllables, wrong vowel sounds, or substitutions that change the word's meaning).
+#         - Do not flag minor variations, such as slight accent differences, acceptable regional pronunciations, fast speech rate, or subtle intonation differences, unless they significantly affect intelligibility.
+#         - If the pronunciation is clear and accurate with no significant errors, return "No mispronounced words detected" without listing any words. This is the expected outcome for accurate speech.
+#         - Use standard American English pronunciation as the reference unless otherwise specified.
+#         - Consider potential limitations, such as audio quality, background noise, or speech rate, and note these in the Additional Notes section. Do not flag issues caused by these limitations as mispronunciations unless they cause significant errors.
+#         - Avoid overanalyzing or assuming errors without strong evidence from the audio or transcription.
+#         """
+        
+#         prompt = prompt.format(transcription=transcription)
+#         response = model.generate_content([prompt, uploaded])
+#         result = response.text.strip()
+#         print("result for mis words",result)
+        
+#         os.remove(temp_audio_path)
+        
+#         # Debug: Log transcription and raw response
+#         # st.write("Transcription:", transcription)
+#         # st.write("Raw Gemini Pronunciation Response:", result)
+        
+#         pronunciation_feedback = ""
+#         mispronounced_words = []
+        
+#         # Extract feedback
+#         feedback_match = re.search(r'Pronunciation Feedback: (.+?)(?:\nMispronounced Words:|$)', result, re.DOTALL)
+#         print("feedbackmatch",feedback_match)
+#         if feedback_match:
+#             pronunciation_feedback = feedback_match.group(1).strip()
+#             print("matched pronouced words",pronunciation_feedback)
+        
+#         # Check for "No mispronounced words detected"
+#         if "No mispronounced words detected" in result:
+#             mispronounced_words = []
+#         else:
+#             # Extract mispronounced words section
+#             mispronounced_section = re.search(r'Mispronounced Words:\n(.+?)(?:\nAdditional Notes:|\n\n|$)', result, re.DOTALL)
+#             if mispronounced_section:
+#                 section_text = mispronounced_section.group(1).strip()
+                
+#                 # Split by word entries
+#                 word_blocks = re.split(r'\n\s*- Word: ', section_text)[1:]  # Skip first empty split
+#                 failed_blocks = []
+#                 for block in word_blocks:
+#                     block = block.strip()
+#                     word_match = re.match(
+#                         r'(.+?)\n\s*Correct Pronunciation: (.+?)\n\s*Phonetic Transcription: (.+?)\n\s*Explanation: (.+?)(?=\n\s*- Word:|\n\s*Additional Notes:|\n\n|$)',
+#                         block, re.DOTALL
+#                     )
+#                     if word_match:
+#                         word, correct_pron, phonetic, explanation = word_match.groups()
+#                         mispronounced_words.append({
+#                             'word': word.strip(),
+#                             'correct_pronunciation': correct_pron.strip(),
+#                             'phonetic_transcription': phonetic.strip(),
+#                             'explanation': explanation.strip()
+#                         })
+#                     else:
+#                         failed_blocks.append(block)
+                
+#                 # Debug: Log failed blocks
+#                 if failed_blocks:
+#                     st.write("Failed to parse blocks:", failed_blocks)
+                
+#                 # Fallback parsing if any entries were missed
+#                 if len(mispronounced_words) < 13:  # Expecting 13 words
+#                     word_matches = re.findall(
+#                         r'- Word: (.+?)\n\s*Correct Pronunciation: (.+?)\n\s*Phonetic Transcription: (.+?)\n\s*Explanation: (.+?)(?=\n\s*- Word:|\n\s*Additional Notes:|\n\n|$)',
+#                         section_text, re.DOTALL
+#                     )
+#                     for word, correct_pron, phonetic, explanation in word_matches:
+#                         entry = {
+#                             'word': word.strip(),
+#                             'correct_pronunciation': correct_pron.strip(),
+#                             'phonetic_transcription': phonetic.strip(),
+#                             'explanation': explanation.strip()
+#                         }
+#                         if entry not in mispronounced_words:
+#                             mispronounced_words.append(entry)
+        
+#         # Debug: Log parsed mispronounced words
+#         # st.write("Parsed Mispronounced Words:", mispronounced_words)
+        
+#         # Extract additional notes
+#         notes_match = re.search(r'Additional Notes: (.+?)(?:\n\n|$)', result, re.DOTALL)
+#         notes = notes_match.group(1).strip() if notes_match else ""
+        
+#         return {
+#             'mispronounced_words': mispronounced_words,
+#             'pronunciation_feedback': pronunciation_feedback,
+#             'notes': notes
+#         }
+    
+#     except Exception as e:
+#         st.error(f"Error identifying mispronounced words: {str(e)}")
+#         return {
+#             'mispronounced_words': [],
+#             'pronunciation_feedback': 'Analysis failed due to an error.',
+#             'notes': str(e)
+#         }
 
 
 
@@ -3836,6 +3940,7 @@ def services():
                     
                     uploaded_file.seek(0)
                     pronunciation_data = identify_mispronounced_words(uploaded_file, transcription)
+                    # print("pronouced words",pronunciation_data)
                     
                     status_container.markdown("""
                         <div class="stStatusContainer stInfo">
@@ -3869,6 +3974,7 @@ def services():
                     """, unsafe_allow_html=True)
                     
                     results = analyze_speech_with_gemini(transcription, topic_of_speech, duration, uploaded_file, gender=pitch_analysis['detected_gender'])
+                    
                     if not results:
                         st.error("Failed to analyze speech")
                         st.stop()
