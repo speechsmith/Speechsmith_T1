@@ -3785,14 +3785,14 @@ def services():
     
     if st.session_state.usage_count >= 5 and not st.session_state.get('is_authenticated', False):
         if not st.session_state.get('logged_in', False):
-                st.error("""
-                    You have reached the free trial limit of 5 uses.
-                    Please fill out the Contact Us form to request access credentials.
-                    Our team will review your request and provide you with login details.
-                    Thank you for trying out SpeechSmith!
-                """)
+            st.error("""
+                You have reached the free trial limit of 5 uses.
+                Please fill out the Contact Us form to request access credentials.
+                Our team will review your request and provide you with login details.
+                Thank you for trying out SpeechSmith!
+            """)
         return
-
+            
     load_services_css()
     
     if 'session_id' not in st.session_state:
