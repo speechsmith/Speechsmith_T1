@@ -1,3 +1,5 @@
+''' main final code '''
+
 import streamlit as st
 from PIL import Image
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
@@ -546,14 +548,19 @@ def detect_pauses_with_gemini(audio_file, duration):
             'timestamps': []
         }
 
+
+
+
 def calculate_wpm_with_gemini(audio_file, transcription, duration):
-    """Calculate words per minute and assess ideal word count using Gemini 1.5 Flash"""
+    """Cal#culate words per minute and assess ideal word count using Gemini 1.5 Flash"""
     temp_audio_path = None
     try:
+        # Create temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=".ogg") as temp_audio:
             temp_audio.write(audio_file.read())
             temp_audio_path = temp_audio.name
         
+        # Upload to Gemini
         uploaded = genai.upload_file(temp_audio_path)
         model = genai.GenerativeModel('gemini-1.5-flash')
         
@@ -575,10 +582,12 @@ def calculate_wpm_with_gemini(audio_file, transcription, duration):
         response = model.generate_content([prompt, uploaded])
         result = response.text.strip()
         # print("result",result)
+        
         total_words = 0
         audio_duration = 0.0
         wpm = 0.0
         
+        # Parse response
         if "Total words:" in result:
             words_match = re.search(r'Total words: (\d+)', result)
             if words_match:
@@ -590,33 +599,85 @@ def calculate_wpm_with_gemini(audio_file, transcription, duration):
                 audio_duration = float(duration_match.group(1))
         
         if "Speaking rate:" in result:
-           
             wpm_match = re.search(r'Speaking rate: ([\d.]+) words per minute', result)
-            # print("wpm ",wpm_match)
             if wpm_match:
                 wpm = float(wpm_match.group(1))
         
+        # Fallback if parsing fails
         if total_words == 0 or audio_duration == 0.0 or wpm == 0.0:
             total_words = len(transcription.split())
             audio = AudioSegment.from_file(temp_audio_path)
             audio_duration = len(audio) / 1000.0
             wpm = (total_words / (audio_duration / 60.0)) if audio_duration > 0 else 0.0
         
+        # Calculate ideal word count and assessment
         ideal_word_count = ""
         assessment = ""
         suggestion = ""
         
+
+
         if duration == "Less than 1 minute":
             ideal_min, ideal_max = 70, 140
             if total_words < ideal_min:
-                assessment = "Too less"
-                suggestion = f"The current word count is {total_words} words. For a <1 minute speech, ideal count is {ideal_min}-{ideal_max} words - please increase."
+                assessment = "Too few"
+                suggestion = f"The current word count is {total_words} words. For a <1 minute speech, the ideal count is {ideal_min}-{ideal_max} words - please increase."
             elif total_words > ideal_max:
-                assessment = "Too much"
-                suggestion = f"The current word count is {total_words} words. For a <1 minute speech, ideal count is {ideal_min}-{ideal_max} words - please decrease."
+                assessment = "Too many"
+                suggestion = f"The current word count is {total_words} words. For a <1 minute speech, the ideal count is {ideal_min}-{ideal_max} words - please decrease."
             else:
                 assessment = "Appropriate"
                 suggestion = f"The current word count is {total_words} words, which is appropriate for a <1 minute speech."
+
+        elif duration == "1-3 minutes":
+            ideal_min, ideal_max = 140, 420  # Assuming 140-420 words for 1-3 minutes (based on 140 WPM average)
+            if total_words < ideal_min:
+                assessment = "Too few"
+                suggestion = f"The current word count is {total_words} words. For a 1-3 minute speech, the ideal count is {ideal_min}-{ideal_max} words - please increase."
+            elif total_words > ideal_max:
+                assessment = "Too many"
+                suggestion = f"The current word count is {total_words} words. For a 1-3 minute speech, the ideal count is {ideal_min}-{ideal_max} words - please decrease."
+            else:
+                assessment = "Appropriate"
+                suggestion = f"The current word count is {total_words} words, which is appropriate for a 1-3 minute speech."
+
+        elif duration == "3-5 minutes":
+            ideal_min, ideal_max = 420, 700  # Assuming 420-700 words for 3-5 minutes
+            if total_words < ideal_min:
+                assessment = "Too few"
+                suggestion = f"The current word count is {total_words} words. For a 3-5 minute speech, the ideal count is {ideal_min}-{ideal_max} words - please increase."
+            elif total_words > ideal_max:
+                assessment = "Too many"
+                suggestion = f"The current word count is {total_words} words. For a 3-5 minute speech, the ideal count is {ideal_min}-{ideal_max} words - please decrease."
+            else:
+                assessment = "Appropriate"
+                suggestion = f"The current word count is {total_words} words, which is appropriate for a 3-5 minute speech."
+
+        elif duration == "More than 5 minutes":
+            ideal_min = 700  # Minimum for >5 minutes, no strict upper limit
+            if total_words < ideal_min:
+                assessment = "Too few"
+                suggestion = f"The current word count is {total_words} words. For a >5 minute speech, the ideal count is at least {ideal_min} words - please increase."
+            else:
+                assessment = "Appropriate"
+                suggestion = f"The current word count is {total_words} words, which is appropriate for a >5 minute speech."
+        else:
+            assessment = "Unknown duration"
+            suggestion = "Please specify a valid duration range."
+
+        # if duration == "Less than 1 minute":
+        #     ideal_min, ideal_max = 70, 140
+        #     if total_words < ideal_min:
+        #         assessment = "Too less"
+        #         suggestion = f"The current word count is {total_words} words. For a <1 minute speech, ideal count is {ideal_min}-{ideal_max} words - please increase."
+        #     elif total_words > ideal_max:
+        #         assessment = "Too much"
+        #         suggestion = f"The current word count is {total_words} words. For a <1 minute speech, ideal count is {ideal_min}-{ideal_max} words - please decrease."
+        #     else:
+        #         assessment = "Appropriate"
+        #         suggestion = f"The current word count is {total_words} words, which is appropriate for a <1 minute speech."
+        
+        # Add similar logic for other durations (omitted for brevity)
         
         return {
             'wpm': round(wpm, 1),
@@ -629,6 +690,7 @@ def calculate_wpm_with_gemini(audio_file, transcription, duration):
     except Exception as e:
         st.error(f"Error calculating WPM: {str(e)}")
         try:
+            # Fallback: Calculate WPM manually
             total_words = len(transcription.split())
             audio = AudioSegment.from_file(temp_audio_path)
             audio_duration = len(audio) / 1000.0
@@ -651,11 +713,14 @@ def calculate_wpm_with_gemini(audio_file, transcription, duration):
             }
     
     finally:
+        # Clean up temporary file
         if temp_audio_path and os.path.exists(temp_audio_path):
             try:
                 os.remove(temp_audio_path)
             except Exception as e:
                 st.warning(f"Failed to delete temporary file {temp_audio_path}: {str(e)}")
+
+
 
 def analyze_speech_with_gemini(transcription, topic=None, duration=None, audio_file=None, gender=None):
     """Analyze speech using Gemini, with pause detection and WPM calculation"""
@@ -1391,6 +1456,8 @@ def generate_word_pronunciation(word):
         st.error(f"Error generating pronunciation for {word}: {str(e)}")
         return None
 
+
+
 # def format_transcription_text(text, mispronounced_words=None):
 #     """Format transcription text with emphasis markers and mispronounced words"""
 #     if mispronounced_words is None:
@@ -1590,26 +1657,32 @@ def format_detailed_feedback(results, pronunciation_data=None):
     )
     
     mispronounced_words = pronunciation_data.get('mispronounced_words', [])
+    
     if mispronounced_words:
         pronunciation_section += "<li><strong>Mispronounced Words:</strong></li><ul>"
         for item in mispronounced_words:
-            # audio_io = generate_word_pronunciation(item['word'])
-            # audio_html = ""
-            # if audio_io:
-            #     audio_bytes = audio_io.getvalue()
-            #     audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
-            #     audio_html = f"""
-            #     <audio class="audio-player" controls>
-            #         <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
-            #         Your browser does not support the audio element.
-            #     </audio>
-            #     """
+          
+            audio_io = generate_word_pronunciation(item['word'])
+          
+           
+            audio_html = ""
+            if audio_io:
+                audio_bytes = audio_io.getvalue()
+                audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+                audio_html = f"""
+                <audio class="audio-player" controls>
+                    <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
+                    Your browser does not support the audio element.
+                </audio>
+                """
             pronunciation_section += f"""
             <li>
                 Word: {item['word']}<br>
                 Correct Pronunciation: {item['correct_pronunciation']}<br>
                 Phonetic Transcription: {item['phonetic_transcription']}<br>
                 Explanation: {item['explanation']}<br>
+                Audio:{audio_html}
+
                
             </li>
             """
@@ -1714,6 +1787,10 @@ def format_detailed_feedback(results, pronunciation_data=None):
     </div>
     """
 
+
+
+
+
 def analyze_audio_gender_and_pitch(audio_file):
     """Analyze the gender and pitch of an audio file using Gemini."""
     try:
@@ -1797,7 +1874,7 @@ def services():
     if 'usage_count' not in st.session_state:
         st.session_state.usage_count = 0
     
-    if st.session_state.usage_count >= 5 and not st.session_state.get('is_authenticated', False) and not st.session_state.get('logged_in', False):
+    if st.session_state.usage_count >= 5 and not st.session_state.get('is_authenticated', False):
         st.error("""
             You have reached the free trial limit of 5 uses.
             Please fill out the Contact Us form to request access credentials.
@@ -1819,10 +1896,43 @@ def services():
     st.markdown('<h1 class="gradient-text">Our Services</h1>', unsafe_allow_html=True)
     st.markdown('<p class="section-subtitle">At speechsmith, we offer a seamless and effective way to refine your speech delivery, ensuring it meets your specific goals and resonates with your audience.</p>', unsafe_allow_html=True)
     
-    if not st.session_state.get('is_authenticated', False) and not st.session_state.get('logged_in', False):
-        remaining_uses = max(0, 5 - st.session_state.usage_count)
+    if not st.session_state.get('is_authenticated', False):
+        remaining_uses = 5 - st.session_state.usage_count
         st.info(f"You have {remaining_uses} free trial uses remaining. Please contact us for full access.")
 
+        content = """
+        <div class="content-section"> 
+        <h2>Speech Analysis and Feedback</h2>
+        <p>Upload your speech as an audio or video file, and receive comprehensive feedback across several parameters:</p>
+        <ul>
+            <li><strong>Pronunciation:</strong> Precision scoring and suggestions to enhance clarity.</li>
+            <li><strong>Posterior Score:</strong> Analysis of fluency and coherence.</li>
+            <li><strong>Semantic Analysis:</strong> Checking the alignment of your speech content with your intended message and audience.</li>
+            <li><strong>Words Per Minute (WPM):</strong> Insights on the ideal pace for engaging delivery.</li>
+            <li><strong>Articulation Rate:</strong> Evaluating clarity and emphasis on key points.</li>
+            <li><strong>Filler Words:</strong> Identifying unnecessary fillers and providing strategies to minimize them.</li>
+        </ul>
+
+        <h2>Personalized Improvement Tips</h2>
+        <p>Based on the analysis, we provide actionable feedback on how you can enhance specific areas of your speech, whether that's clarity, pace, or vocabulary usage. You'll receive structured advice to help you sound more confident and professional.</p>
+
+        <h2>Script Refinement</h2>
+        <p>Receive an edited version of your script that aligns with your requirements and intended audience. Our suggestions will help tailor your content to maximize impact, ensuring that your speech resonates with your listeners.</p>
+
+        <h2>Comprehensive Progress Reports</h2>
+        <p>Track your improvement over time! Our platform keeps a record of your past uploads, allowing you to see your progress in metrics like articulation rate, pronunciation, and speech pace. With regular practice, watch your confidence grow with every upload.</p>
+
+        <h2>Speech Crafting for Diverse Scenarios</h2>
+        <p>We support users in creating and refining speeches for various purposes, including:</p>
+        <ul>
+            <li><strong>Debates and Competitions:</strong> Get debate-ready with speech pacing, rebuttal framing, and structured delivery feedback.</li>
+            <li><strong>Presentations:</strong> Improve your presentation style for maximum engagement in team meetings, client pitches, or school projects.</li>
+            <li><strong>Public Speaking Practice:</strong> For those simply wanting to refine their public speaking, SpeechSmith offers ongoing feedback to strengthen and elevate your speaking style.</li>
+        </ul>
+        </div>
+    """
+    st.html(content)
+    
     col1, col2 = st.columns(2)
     
     with col1:
@@ -1892,7 +2002,7 @@ def services():
                 st.stop()
             
             if not st.session_state.get('is_authenticated', False):
-                st.session_state.usage_count = min(5, st.session_state.usage_count + 1)
+                st.session_state.usage_count += 1
             
             status_container = st.empty()
             
