@@ -6,6 +6,7 @@ from pages.service_page import services
 from pages.home_page import home
 from pages.about_page import about
 from pages.contact_page import contact
+import streamlit.components.v1 as components
 
 # Set page config must be first
 st.set_page_config(
@@ -17,6 +18,19 @@ st.set_page_config(
 # Load environment variables
 load_dotenv()
 
+def inject_ga():
+    GA_MEASUREMENT_ID = "G-D0X3T2TZM7"  # Replace with your ID
+    components.html(f"""
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={GA_MEASUREMENT_ID}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {{ dataLayer.push(arguments); }}
+      gtag('js', new Date());
+      gtag('config', '{GA_MEASUREMENT_ID}');
+    </script>
+    """, height=0)
+    
 def load_main_css():
     st.markdown("""
         <style>
