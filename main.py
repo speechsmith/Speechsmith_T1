@@ -18,6 +18,7 @@ st.set_page_config(
 # Load environment variables
 load_dotenv()
 
+# Inject Google Analytics script (updated method)
 def inject_ga():
     GA_MEASUREMENT_ID = "G-D0X3T2TZM7"
     st.markdown(f"""
@@ -31,7 +32,7 @@ def inject_ga():
         </script>
     """, unsafe_allow_html=True)
 
-    
+# Load CSS for the app
 def load_main_css():
     st.markdown("""
         <style>
@@ -47,7 +48,7 @@ def load_main_css():
             background: #f8f5ff;
             font-size: 1.1rem;
         }
-        
+
         /* Navigation styles */
         .nav {
             padding: 1rem 2rem;
@@ -102,6 +103,7 @@ def load_main_css():
         </style>
     """, unsafe_allow_html=True)
 
+# Load credentials (for login)
 def load_credentials():
     """Load credentials from a JSON file"""
     try:
@@ -120,6 +122,7 @@ def load_credentials():
             json.dump(credentials, f)
         return credentials
 
+# Login page logic
 def login_page():
     st.markdown('<div class="login-container">', unsafe_allow_html=True)
     st.markdown('<h1 class="login-title">Welcome Back!</h1>', unsafe_allow_html=True)
@@ -141,9 +144,10 @@ def login_page():
     
     st.markdown('</div>', unsafe_allow_html=True)
 
+# Main function
 def main():
     # Inject Google Analytics script
-    inject_ga()  # ← Add this line here ✅
+    inject_ga()  # Inject GA tracking code here ✅
 
     # Load CSS
     load_main_css()
@@ -154,7 +158,7 @@ def main():
     if 'page' not in st.session_state:
         st.session_state.page = 'home'
     
-    # Navigation
+    # Navigation logic
     col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
     
     with col1:
@@ -192,5 +196,6 @@ def main():
     elif st.session_state.page == 'contact':
         contact()
 
+# Run the app
 if __name__ == "__main__":
     main()
