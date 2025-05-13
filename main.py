@@ -132,9 +132,6 @@ def login_page():
 
 # Main function
 def main():
-    # Inject Google Analytics script
-    inject_ga()  # Inject GA tracking code here ✅
-
     # Load CSS
     load_main_css()
     
