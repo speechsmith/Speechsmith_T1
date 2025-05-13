@@ -141,6 +141,9 @@ def login_page():
     st.markdown('</div>', unsafe_allow_html=True)
 
 def main():
+    # Inject Google Analytics script
+    inject_ga()  # ← Add this line here ✅
+
     # Load CSS
     load_main_css()
     
