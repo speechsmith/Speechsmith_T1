@@ -20,17 +20,33 @@ load_dotenv()
 
 # Inject Google Analytics script (updated method)
 def inject_ga():
-    GA_MEASUREMENT_ID = "G-D0X3T2TZM7"
-    st.markdown(f"""
-        <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id={GA_MEASUREMENT_ID}"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){{dataLayer.push(arguments);}}
-          gtag('js', new Date());
-          gtag('config', '{GA_MEASUREMENT_ID}');
-        </script>
-    """, unsafe_allow_html=True)
+    # Replace with your own GA4 Measurement ID
+    GA_MEASUREMENT_ID = "G-D0X3T2TZM7"  # 🔁 Replace this with your ID
+
+    ga_script = f"""
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={GA_MEASUREMENT_ID}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){{dataLayer.push(arguments);}}
+      gtag('js', new Date());
+
+      gtag('config', '{GA_MEASUREMENT_ID}');
+    </script>
+    """
+    components.html(ga_script, height=0)
+
+def track_page_view(page_name):
+    js = f"""
+    <script>
+      gtag('event', 'page_view', {{
+        'page_title': '{page_name}',
+        'page_path': '/{page_name}'
+      }});
+    </script>
+    """
+    components.html(js, height=0)
+
 
 # Load CSS for the app
 def load_main_css():
@@ -189,12 +205,16 @@ def main():
         login_page()
     elif st.session_state.page == 'home':
         home()
+        track_page_view("home")
     elif st.session_state.page == 'about':
         about()
+        track_page_view("about")
     elif st.session_state.page == 'services':
         services()
+        track_page_view("services")
     elif st.session_state.page == 'contact':
         contact()
+        track_page_view("contact")
 
 # Run the app
 if __name__ == "__main__":
