@@ -19,17 +19,18 @@ st.set_page_config(
 load_dotenv()
 
 def inject_ga():
-    GA_MEASUREMENT_ID = "G-D0X3T2TZM7"  # Replace with your ID
-    components.html(f"""
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id={GA_MEASUREMENT_ID}"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {{ dataLayer.push(arguments); }}
-      gtag('js', new Date());
-      gtag('config', '{GA_MEASUREMENT_ID}');
-    </script>
-    """, height=0)
+    GA_MEASUREMENT_ID = "G-D0X3T2TZM7"
+    st.markdown(f"""
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id={GA_MEASUREMENT_ID}"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){{dataLayer.push(arguments);}}
+          gtag('js', new Date());
+          gtag('config', '{GA_MEASUREMENT_ID}');
+        </script>
+    """, unsafe_allow_html=True)
+
     
 def load_main_css():
     st.markdown("""
