@@ -1088,11 +1088,11 @@ def identify_mispronounced_words(audio_file, transcription):
         notes_match = re.search(r'Additional Notes: (.+?)(?:\n\n|$)', result, re.DOTALL)
         notes = notes_match.group(1).strip() if notes_match else ""
         
-        print("pronouced words", {
-            'mispronounced_words': mispronounced_words,
-            'pronunciation_feedback': pronunciation_feedback,
-            'notes': notes
-        })
+        # print("pronouced words", {
+        #     'mispronounced_words': mispronounced_words,
+        #     'pronunciation_feedback': pronunciation_feedback,
+        #     'notes': notes
+        # })
         
         return {
             'mispronounced_words': mispronounced_words,
@@ -1447,7 +1447,7 @@ def generate_word_pronunciation(word):
     """Generate audio for a single word using gTTS"""
     try:
         # tts = gTTS(text=word, lang='en')
-        tts = tts = gTTS(text = word, lang='en', tld='co.in')
+        tts = gTTS(text = word, lang='en', tld='co.in')
         audio_io = io.BytesIO()
         tts.write_to_fp(audio_io)
         audio_io.seek(0)
@@ -2045,7 +2045,8 @@ def services():
                     
                     try:
                         st.info("Generating AI version of your speech...")
-                        tts = gTTS(text=transcription, lang='en')
+                        # tts = gTTS(text=transcription, lang='en')
+                        tts = gTTS(text=transcription, lang='en', tld='co.in')
                         ai_audio_io = io.BytesIO()
                         tts.write_to_fp(ai_audio_io)
                         ai_audio_io.seek(0)
@@ -2138,8 +2139,9 @@ def services():
                 if not cleaned_speech:
                     st.error("No text available for audio generation")
                     st.stop()
-
-                tts = gTTS(text=cleaned_speech)
+                tts = gTTS(text=cleaned_speech,lang='en', tld='co.in')
+                
+                # tts = gTTS(text=cleaned_speech)
                 audio_io = io.BytesIO()
                 tts.write_to_fp(audio_io)
                 audio_io.seek(0)
@@ -2336,5 +2338,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
