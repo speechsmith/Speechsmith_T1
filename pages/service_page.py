@@ -2010,7 +2010,7 @@ def services():
                 status_container.markdown("""
                     <div class="stStatusContainer stInfo">
                         <span class="step-counter">1</span>
-                        Transcribing your speech using Gemini...
+                        
                     </div>
                 """, unsafe_allow_html=True)
                 
