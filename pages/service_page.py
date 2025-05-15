@@ -2281,7 +2281,7 @@ def services():
                                 st.markdown(
                                     f'<a href="data:audio/mp3;base64,{base64.b64encode(st.session_state.ai_audio_bytes).decode()}" download="ai_version.mp3" style="text-decoration: none;">'
                                     '<button style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%;">'
-                                    'Download AI Version'
+                                    'Download AI Version of Original Speech'
                                     '</button>'
                                     '</a>',
                                     unsafe_allow_html=True
