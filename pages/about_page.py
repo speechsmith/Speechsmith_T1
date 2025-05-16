@@ -98,6 +98,7 @@ def load_about_css():
             font-weight: 600;
         }
 
+        /* New styles for the flex layout */
         .content-wrapper {
             display: flex;
             gap: 2rem;
@@ -173,8 +174,4 @@ def about():
             </div>
         </div>
     """
-
-    st.markdown(content, unsafe_allow_html=True)
-
-# To use this, call the function in your Streamlit app:
-# about()
+    st.html(content)
