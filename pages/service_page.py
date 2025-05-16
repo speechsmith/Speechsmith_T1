@@ -1927,7 +1927,7 @@ def services():
         <ul>
             <li><strong>Presentations:</strong> Practice for your interviews to ace them, and improve your presentation style for maximum engagement in team meetings and client pitches.</li>
             <li><strong>Public Speaking Practice:</strong> For those simply wanting to refine their public speaking, SpeechSmith offers ongoing feedback to strengthen and elevate your speaking style.</li>
-            <li><strong>Classroom Reading practice for students:</strong> 4. Practice reading from school and other textbooks to improve you reading skills and English fluency.</li>
+            <li><strong>Classroom Reading practice for students:</strong> Practice reading from school and other textbooks to improve you reading skills and English fluency.</li>
             <li><strong>Debates and Competitions:</strong> Get debate-ready with speech pacing, rebuttal framing, and structured delivery feedback.</li>
         </ul>
         </div>
