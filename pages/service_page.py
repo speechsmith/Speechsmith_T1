@@ -1925,9 +1925,10 @@ def services():
         <h2>Speech Crafting for Diverse Scenarios</h2>
         <p>We support users in creating and refining speeches for various purposes, including:</p>
         <ul>
-            <li><strong>Debates and Competitions:</strong> Get debate-ready with speech pacing, rebuttal framing, and structured delivery feedback.</li>
-            <li><strong>Presentations:</strong> Improve your presentation style for maximum engagement in team meetings, client pitches, or school projects.</li>
+            <li><strong>Interview Preparation and Presentations:</strong> Practice for your interviews to ace them, and improve your presentation style for maximum engagement in team meetings and client pitches.</li>
             <li><strong>Public Speaking Practice:</strong> For those simply wanting to refine their public speaking, SpeechSmith offers ongoing feedback to strengthen and elevate your speaking style.</li>
+            <li><strong>Debates and Competitions:</strong> Get debate-ready with speech pacing, rebuttal framing, and structured delivery feedback.</li>
+            <li><strong>Classroom Reading practice for students:</strong> 4. Practice reading from school and other textbooks to improve you reading skills and English fluency.</li>
         </ul>
         </div>
     """
