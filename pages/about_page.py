@@ -98,7 +98,6 @@ def load_about_css():
             font-weight: 600;
         }
 
-        /* New styles for the flex layout */
         .content-wrapper {
             display: flex;
             gap: 2rem;
@@ -129,7 +128,6 @@ def load_about_css():
 
 def about():
     load_about_css()
-
     content = """
         <div class="about-container">
             <div class="gradient-text">
@@ -174,4 +172,4 @@ def about():
             </div>
         </div>
     """
-    st.html(content)
+    st.markdown(content, unsafe_allow_html=True)
