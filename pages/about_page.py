@@ -128,6 +128,7 @@ def load_about_css():
 
 def about():
     load_about_css()
+
     content = """
         <div class="about-container">
             <div class="gradient-text">
@@ -172,4 +173,8 @@ def about():
             </div>
         </div>
     """
+
     st.markdown(content, unsafe_allow_html=True)
+
+# To use this, call the function in your Streamlit app:
+# about()
